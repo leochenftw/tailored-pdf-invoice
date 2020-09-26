@@ -511,9 +511,10 @@ class InvoicePrinter extends tFPDF
                 if ($item['description']) {
                     //Precalculate height
                     $calculateHeight = new self();
-                    $calculateHeight->addPage();
+                    $calculateHeight->AddPage();
                     $calculateHeight->setXY(0, 0);
-                    $calculateHeight->SetFont($this->font, '', 7);
+                    $calculateHeight->AddFont('DejaVu','','DejaVuSansCondensed.ttf',true);
+                    $calculateHeight->SetFont('DejaVu','',14);
                     $calculateHeight->MultiCell($this->firstColumnWidth, 3,
                         $item['description'], 0, 'L', 1);
                     $descriptionHeight = $calculateHeight->getY() + $cellHeight + 2;
@@ -528,16 +529,16 @@ class InvoicePrinter extends tFPDF
                 $this->SetFillColor($bgcolor, $bgcolor, $bgcolor);
                 $this->Cell(1, $cHeight, '', 0, 0, 'L', 1);
                 $x = $this->GetX();
-                $this->Cell($this->firstColumnWidth, $cHeight, iconv(self::ICONV_CHARSET_INPUT, self::ICONV_CHARSET_OUTPUT_A, $item['item']), 0, 0, 'L',
-                    1);
+                $this->AddFont('DejaVu','','DejaVuSansCondensed.ttf',true);
+                $this->SetFont('DejaVu','', 8);
+                $this->Cell($this->firstColumnWidth, $cHeight, $item['item'], 0, 0, 'L', 1);
                 if ($item['description']) {
                     $resetX = $this->GetX();
                     $resetY = $this->GetY();
                     $this->SetTextColor(120, 120, 120);
                     $this->SetXY($x, $this->GetY() + 8);
                     $this->SetFont($this->font, '', $this->fontSizeProductDescription);
-                    $this->MultiCell($this->firstColumnWidth, floor($this->fontSizeProductDescription / 2), iconv(self::ICONV_CHARSET_INPUT, self::ICONV_CHARSET_OUTPUT_A, $item['description']), 0,
-                        'L', 1);
+                    $this->MultiCell($this->firstColumnWidth, floor($this->fontSizeProductDescription / 2), $item['description'], 0, 'L', 1);
                     //Calculate Height
                     $newY = $this->GetY();
                     $cHeight = $newY - $resetY + 2;
