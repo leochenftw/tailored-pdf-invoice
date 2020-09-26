@@ -13,6 +13,7 @@
 
 namespace Leochenftw\PdfInvoice;
 
+use SilverStripe\Dev\Debug;
 use tFPDF;
 
 class InvoicePrinter extends tFPDF
@@ -358,15 +359,14 @@ class InvoicePrinter extends tFPDF
             - max($this->GetStringWidth(mb_strtoupper($this->lang['number'], self::ICONV_CHARSET_INPUT)),
                 $this->GetStringWidth(mb_strtoupper($this->lang['date'], self::ICONV_CHARSET_INPUT)),
                 $this->GetStringWidth(mb_strtoupper($this->lang['due'], self::ICONV_CHARSET_INPUT)))
-            - max($this->GetStringWidth(mb_strtoupper($this->reference, self::ICONV_CHARSET_INPUT)),
+            - max($this->GetStringWidth(mb_strtoupper($this->reference . 'AA', self::ICONV_CHARSET_INPUT)),
                 $this->GetStringWidth(mb_strtoupper($this->date, self::ICONV_CHARSET_INPUT)));
 
         //Number
         if (!empty($this->reference)) {
             $this->Cell($positionX, $lineheight);
             $this->SetTextColor($this->color[0], $this->color[1], $this->color[2]);
-            $this->Cell(32, $lineheight, iconv(self::ICONV_CHARSET_INPUT, self::ICONV_CHARSET_OUTPUT_A, mb_strtoupper($this->lang['number'], self::ICONV_CHARSET_INPUT).':'), 0, 0,
-                'L');
+            $this->Cell(32, $lineheight, mb_strtoupper($this->lang['number'], self::ICONV_CHARSET_INPUT).': ', 0, 0, 'L');
             $this->SetTextColor(50, 50, 50);
             $this->SetFont($this->font, '', 9);
             $this->Cell(0, $lineheight, $this->reference, 0, 1, 'R');
@@ -375,7 +375,7 @@ class InvoicePrinter extends tFPDF
         $this->Cell($positionX, $lineheight);
         $this->SetFont($this->font, 'B', 9);
         $this->SetTextColor($this->color[0], $this->color[1], $this->color[2]);
-        $this->Cell(32, $lineheight, iconv(self::ICONV_CHARSET_INPUT, self::ICONV_CHARSET_OUTPUT_A, mb_strtoupper($this->lang['date'], self::ICONV_CHARSET_INPUT)).':', 0, 0, 'L');
+        $this->Cell(32, $lineheight, mb_strtoupper($this->lang['date'], self::ICONV_CHARSET_INPUT).': ', 0, 0, 'L');
         $this->SetTextColor(50, 50, 50);
         $this->SetFont($this->font, '', 9);
         $this->Cell(0, $lineheight, $this->date, 0, 1, 'R');
@@ -503,6 +503,7 @@ class InvoicePrinter extends tFPDF
         $width_other = ($this->document['w'] - $this->margins['l'] - $this->margins['r'] - $this->firstColumnWidth - ($this->columns * $this->columnSpacing)) / ($this->columns - 1);
         $cellHeight = 8;
         $bgcolor = (1 - $this->columnOpacity) * 255;
+        $this->AddFont('DejaVu','','DejaVuSansCondensed.ttf',true);
         if ($this->items) {
             foreach ($this->items as $item) {
                 if ((empty($item['item'])) || (empty($item['description']))) {
@@ -515,8 +516,7 @@ class InvoicePrinter extends tFPDF
                     $calculateHeight->setXY(0, 0);
                     $calculateHeight->AddFont('DejaVu','','DejaVuSansCondensed.ttf',true);
                     $calculateHeight->SetFont('DejaVu','', 7);
-                    $calculateHeight->MultiCell($this->firstColumnWidth, 3,
-                        $item['description'], 0, 'L', 1);
+                    $calculateHeight->MultiCell($this->firstColumnWidth, 3, $item['description'], 0, 'L', 1);
                     $descriptionHeight = $calculateHeight->getY() + $cellHeight + 2;
                     $pageHeight = $this->document['h'] - $this->GetY() - $this->margins['t'] - $this->margins['t'];
                     if ($pageHeight < 35) {
@@ -529,27 +529,32 @@ class InvoicePrinter extends tFPDF
                 $this->SetFillColor($bgcolor, $bgcolor, $bgcolor);
                 $this->Cell(1, $cHeight, '', 0, 0, 'L', 1);
                 $x = $this->GetX();
-                $this->AddFont('DejaVu','','DejaVuSansCondensed.ttf',true);
                 $this->SetFont('DejaVu','', 8);
-                $this->Cell($this->firstColumnWidth, $cHeight, $item['item'], 0, 0, 'L', 1);
+                $resetY = $this->GetY();
+                $this->MultiCell($this->firstColumnWidth, floor($cHeight / 1.6), $item['item'], 0, 'L', 1);
+                $resetX = $this->firstColumnWidth + $x;
+
                 if ($item['description']) {
                     $resetX = $this->GetX();
                     $resetY = $this->GetY();
                     $this->SetTextColor(120, 120, 120);
                     $this->SetXY($x, $this->GetY() + 8);
-                    $this->SetFont($this->font, '', $this->fontSizeProductDescription);
+                    $this->SetFont('DejaVu','', 8);
                     $this->MultiCell($this->firstColumnWidth, floor($this->fontSizeProductDescription / 2), $item['description'], 0, 'L', 1);
-                    //Calculate Height
-                    $newY = $this->GetY();
-                    $cHeight = $newY - $resetY + 2;
-                    //Make our spacer cell the same height
-                    $this->SetXY($x - 1, $resetY);
-                    $this->Cell(1, $cHeight, '', 0, 0, 'L', 1);
-                    //Draw empty cell
-                    $this->SetXY($x, $newY);
-                    $this->Cell($this->firstColumnWidth, 2, '', 0, 0, 'L', 1);
-                    $this->SetXY($resetX, $resetY);
+
                 }
+
+                //Calculate Height
+                $newY = $this->GetY();
+                $cHeight = $newY - $resetY + 2;
+                //Make our spacer cell the same height
+                $this->SetXY($x - 1, $resetY);
+                $this->Cell(1, $cHeight, '', 0, 0, 'L', 1);
+                //Draw empty cell
+                $this->SetXY($x, $newY);
+                $this->Cell($this->firstColumnWidth, 2, '', 0, 0, 'L', 1);
+                $this->SetXY($resetX, $resetY);
+
                 $this->SetTextColor(50, 50, 50);
                 $this->SetFont($this->font, '', 8);
                 $this->Cell($this->columnSpacing, $cHeight, '', 0, 0, 'L', 0);
