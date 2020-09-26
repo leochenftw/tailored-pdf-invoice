@@ -13,7 +13,6 @@
 
 namespace Leochenftw\PdfInvoice;
 
-use SilverStripe\Dev\Debug;
 use tFPDF;
 
 class InvoicePrinter extends tFPDF
