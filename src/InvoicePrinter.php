@@ -514,7 +514,7 @@ class InvoicePrinter extends tFPDF
                     $calculateHeight->AddPage();
                     $calculateHeight->setXY(0, 0);
                     $calculateHeight->AddFont('DejaVu','','DejaVuSansCondensed.ttf',true);
-                    $calculateHeight->SetFont('DejaVu','',14);
+                    $calculateHeight->SetFont('DejaVu','', 7);
                     $calculateHeight->MultiCell($this->firstColumnWidth, 3,
                         $item['description'], 0, 'L', 1);
                     $descriptionHeight = $calculateHeight->getY() + $cellHeight + 2;
