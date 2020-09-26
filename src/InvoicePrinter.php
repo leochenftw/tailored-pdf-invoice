@@ -11,11 +11,12 @@
  * @since       2017-12-15
  */
 
-namespace Konekt\PdfInvoice;
+namespace Leochenftw\PdfInvoice;
 
-use FPDF;
+use SilverStripe\Dev\Debug;
+use tFPDF;
 
-class InvoicePrinter extends FPDF
+class InvoicePrinter extends tFPDF
 {
     const ICONV_CHARSET_INPUT = 'UTF-8';
     const ICONV_CHARSET_OUTPUT_A = 'ISO-8859-1//TRANSLIT';
@@ -52,7 +53,6 @@ class InvoicePrinter extends FPDF
     public $footernote;
     public $dimensions;
     public $display_tofrom = true;
-    public $customHeaders = [];
     protected $displayToFromHeaders = true;
     protected $columns;
 
@@ -64,7 +64,7 @@ class InvoicePrinter extends FPDF
         $this->firstColumnWidth = 70;
         $this->currency = $currency;
         $this->maxImageDimensions = [230, 130];
-	  $this->dimensions         = [61.0, 34.0];
+        $this->dimensions         = [61.0, 34.0];
         $this->from               = [''];
         $this->to                 = [''];
         $this->setLanguage($language);
@@ -151,11 +151,6 @@ class InvoicePrinter extends FPDF
     private function br2nl($string)
     {
         return preg_replace('/\<br(\s*)?\/?\>/i', "\n", $string);
-    }
-
-    public function changeLanguageTerm($term, $new)
-    {
-        $this->lang[$term] = $new;
     }
 
     public function isValidTimezoneId($zone)
@@ -263,14 +258,6 @@ class InvoicePrinter extends FPDF
         } else {
             return $this->currency.$space.number_format($price, 2, $decimalPoint, $thousandSeparator);
         }
-    }
-
-    public function addCustomHeader($title, $content)
-    {
-        $this->customHeaders[] = [
-            'title' => $title,
-            'content' => $content,
-        ];
     }
 
     public function addItem($item, $description, $quantity, $vat, $price, $discount, $total)
@@ -415,24 +402,11 @@ class InvoicePrinter extends FPDF
             $this->SetFont($this->font, '', 9);
             $this->Cell(0, $lineheight, $this->due, 0, 1, 'R');
         }
-        //Custom Headers
-        if (count($this->customHeaders) > 0) {
-            foreach ($this->customHeaders as $customHeader) {
-                $this->Cell($positionX, $lineheight);
-                $this->SetFont($this->font, 'B', 9);
-                $this->SetTextColor($this->color[0], $this->color[1], $this->color[2]);
-                $this->Cell(32, $lineheight, iconv(self::ICONV_CHARSET_INPUT, self::ICONV_CHARSET_OUTPUT_A, mb_strtoupper($customHeader['title'], self::ICONV_CHARSET_INPUT)) . ':', 0, 0, 'L');
-                $this->SetTextColor(50, 50, 50);
-                $this->SetFont($this->font, '', 9);
-                $this->Cell(0, $lineheight, $customHeader['content'], 0, 1, 'R');
-            }
-        }
 
         //First page
         if ($this->PageNo() == 1) {
-            $dimensions = $this->dimensions[1] ?? 0;
-            if (($this->margins['t'] + $dimensions) > $this->GetY()) {
-                $this->SetY($this->margins['t'] + $dimensions + 5);
+            if (($this->margins['t'] + $this->dimensions[1]) > $this->GetY()) {
+                $this->SetY($this->margins['t'] + $this->dimensions[1] + 5);
             } else {
                 $this->SetY($this->GetY() + 10);
             }
@@ -471,8 +445,8 @@ class InvoicePrinter extends FPDF
                 $this->Ln(5);
                 $this->SetTextColor(50, 50, 50);
                 $this->SetFont($this->font, 'B', 10);
-                $this->Cell($width, $lineheight, $this->from[0] ?? 0, 0, 0, 'L');
-                $this->Cell(0, $lineheight, iconv(self::ICONV_CHARSET_INPUT, self::ICONV_CHARSET_OUTPUT_A,  $this->to[0] ?? 0), 0, 0, 'L');
+                $this->Cell($width, $lineheight, $this->from[0], 0, 0, 'L');
+                $this->Cell(0, $lineheight, iconv(self::ICONV_CHARSET_INPUT, self::ICONV_CHARSET_OUTPUT_A, $this->to[0]), 0, 0, 'L');
                 $this->SetFont($this->font, '', 8);
                 $this->SetTextColor(100, 100, 100);
                 $this->Ln(7);
@@ -542,7 +516,7 @@ class InvoicePrinter extends FPDF
                     $calculateHeight->setXY(0, 0);
                     $calculateHeight->SetFont($this->font, '', 7);
                     $calculateHeight->MultiCell($this->firstColumnWidth, 3,
-                        iconv(self::ICONV_CHARSET_INPUT, self::ICONV_CHARSET_OUTPUT_A, $item['description']), 0, 'L', 1);
+                        $item['description'], 0, 'L', 1);
                     $descriptionHeight = $calculateHeight->getY() + $cellHeight + 2;
                     $pageHeight = $this->document['h'] - $this->GetY() - $this->margins['t'] - $this->margins['t'];
                     if ($pageHeight < 35) {
