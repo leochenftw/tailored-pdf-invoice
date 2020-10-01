@@ -523,25 +523,24 @@ class InvoicePrinter extends tFPDF
                         $this->AddPage();
                     }
                 }
-                $cHeight = $cellHeight;
+
+                $cHeight = (int) floor($cellHeight / 1.6);
                 $this->SetFont($this->font, 'b', 8);
                 $this->SetTextColor(50, 50, 50);
                 $this->SetFillColor($bgcolor, $bgcolor, $bgcolor);
+                $y = 0;
                 $this->Cell(1, $cHeight, '', 0, 0, 'L', 1);
                 $x = $this->GetX();
                 $this->SetFont('DejaVu','', 8);
                 $resetY = $this->GetY();
-                $this->MultiCell($this->firstColumnWidth, floor($cHeight / 1.6), $item['item'], 0, 'L', 1);
+                $this->MultiCell($this->firstColumnWidth, $cHeight, $item['item'], 0, 'L', 1);
                 $resetX = $this->firstColumnWidth + $x;
 
                 if ($item['description']) {
-                    $resetX = $this->GetX();
-                    $resetY = $this->GetY();
                     $this->SetTextColor(120, 120, 120);
-                    $this->SetXY($x, $this->GetY() + 8);
+                    $this->SetXY($x, $resetY + $cHeight);
                     $this->SetFont('DejaVu','', 8);
                     $this->MultiCell($this->firstColumnWidth, floor($this->fontSizeProductDescription / 2), $item['description'], 0, 'L', 1);
-
                 }
 
                 //Calculate Height
